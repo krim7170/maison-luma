@@ -1,23 +1,38 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Syncopate, DM_Sans } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
+const syncopate = Syncopate({
+  weight: ["400", "700"],
+  subsets: ["latin"],
+  variable: "--font-syncopate",
+  display: "swap",
+  preload: true,
+});
+
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  variable: "--font-dm-sans",
+  display: "swap",
+  preload: true,
+});
 
 export const metadata: Metadata = {
-  title: "Maison Luma — L'élégance à l'état pur",
+  title: "Maison Luma — Mobilier Outdoor Premium",
   description:
-    "Maison Luma réunit des artisans d'exception pour créer des objets qui transcendent le temps. Collection de mobilier, céramiques et luminaires d'exception.",
+    "Mobilier outdoor haut de gamme en teck massif et tissu Sunbrella®. Collections exclusives, assemblage artisanal, livraison sur-mesure.",
+  keywords: ["mobilier outdoor", "canapé jardin", "teck", "luxe", "Sunbrella"],
+  openGraph: {
+    title: "Maison Luma — Mobilier Outdoor Premium",
+    description: "L'art de vivre en extérieur. Collections exclusives en teck et Sunbrella®.",
+    type: "website",
+  },
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr">
-      <body className={`${inter.className} antialiased`}>{children}</body>
+    <html lang="fr" className={`${syncopate.variable} ${dmSans.variable}`}>
+      <body className="antialiased">{children}</body>
     </html>
   );
 }
