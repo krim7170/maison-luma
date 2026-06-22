@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ArrowLeft, Plus, Trash2, Package, Settings, Loader2, Pencil, X } from "lucide-react";
 import { getShops, getProducts, createShop, deleteShop, createProduct, deleteProduct, updateProduct, getSettings, updateWhatsapp } from "@/lib/data";
-import { isSupabaseReady } from "@/lib/supabase";
+import { isSupabaseReady, supabase } from "@/lib/supabase";
 import { Shop, Product, CATEGORIES, CLOTHING_CATEGORIES, SHOE_CATEGORIES, CLOTHING_SIZES, SHOE_SIZES } from "@/types";
 
 type Tab = "boutiques" | "produits" | "settings";
@@ -27,6 +27,7 @@ export default function AdminPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({
     name: "", price: "", old_price: "", is_sale: false, is_bulk: false, sizes: [] as string[],
+    image_url: "", imageFile: null as File | null, imagePreview: "",
   });
 
   useEffect(() => {
@@ -135,7 +136,16 @@ export default function AdminPage() {
       is_sale: product.is_sale,
       is_bulk: product.is_bulk,
       sizes: product.sizes || [],
+      image_url: product.image_url || "",
+      imageFile: null,
+      imagePreview: product.image_url || "",
     });
+  };
+
+  const handleEditImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setEditForm((prev) => ({ ...prev, imageFile: file, imagePreview: URL.createObjectURL(file) }));
   };
 
   const toggleEditSize = (size: string) => {
@@ -148,6 +158,16 @@ export default function AdminPage() {
   const handleSaveEdit = async () => {
     if (!editingId || !editForm.name.trim() || !editForm.price) return;
     setSaving(true);
+    let image_url = editForm.image_url;
+    if (editForm.imageFile && supabase) {
+      const ext = editForm.imageFile.name.split(".").pop();
+      const path = `${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage.from("product-images").upload(path, editForm.imageFile, { upsert: false });
+      if (!uploadError) {
+        const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(path);
+        image_url = urlData.publicUrl;
+      }
+    }
     const updates = {
       name: editForm.name.trim(),
       price: parseInt(editForm.price),
@@ -155,6 +175,7 @@ export default function AdminPage() {
       is_sale: editForm.is_sale,
       is_bulk: editForm.is_bulk,
       sizes: editForm.sizes,
+      image_url,
     };
     const ok = await updateProduct(editingId, updates);
     if (ok) {
@@ -404,6 +425,18 @@ export default function AdminPage() {
                           ))}
                         </div>
                       )}
+                      <label className="flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-xl p-3 cursor-pointer hover:border-yellow-400 bg-gray-50">
+                        {editForm.imagePreview ? (
+                          <img src={editForm.imagePreview} alt="Preview" className="h-28 object-contain rounded-lg" />
+                        ) : (
+                          <>
+                            <Package size={28} className="text-gray-300 mb-1" />
+                            <span className="text-xs text-gray-400 text-center">Changer la photo</span>
+                          </>
+                        )}
+                        <input type="file" accept="image/*" capture="environment" onChange={handleEditImageChange} className="hidden" />
+                      </label>
+
                       <div className="flex gap-2">
                         <button onClick={handleSaveEdit} disabled={saving}
                           className="flex-1 bg-ink text-saffron font-bold py-2.5 rounded-xl text-sm disabled:opacity-40">
