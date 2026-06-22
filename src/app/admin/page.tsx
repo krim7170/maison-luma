@@ -367,7 +367,7 @@ export default function AdminPage() {
                             </span>
                           </>
                         )}
-                        <input type="file" accept="image/*" capture="environment" onChange={handleImageChange} className="hidden" />
+                        <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
                       </label>
                     </div>
 
