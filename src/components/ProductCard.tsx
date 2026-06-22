@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Heart, ShoppingBag } from "lucide-react";
 import { Product, Shop } from "@/types";
 
@@ -8,7 +9,7 @@ interface ProductCardProps {
   shop?: Shop;
   wishlist?: string[];
   onWishlistToggle?: (productId: string) => void;
-  onOrder?: (product: Product, shop?: Shop) => void;
+  onOrder?: (product: Product, shop?: Shop, photoIndex?: number) => void;
   size?: "sm" | "md";
 }
 
@@ -22,18 +23,17 @@ export default function ProductCard({
 }: ProductCardProps) {
   const isWished = wishlist.includes(product.id);
   const cardWidth = size === "sm" ? "w-36" : "w-44";
+  const photos = product.images?.length ? product.images : product.image_url ? [product.image_url] : [];
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const currentPhoto = photos[selectedIndex];
 
   return (
     <div className={`${cardWidth} flex-shrink-0 bg-white rounded-xl overflow-hidden shadow-sm`}>
-      {/* Image */}
+      {/* Main image */}
       <div className="relative bg-gray-100 aspect-square">
-        {product.image_url ? (
+        {currentPhoto ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={product.image_url}
-            alt={product.name}
-            className="w-full h-full object-cover"
-          />
+          <img src={currentPhoto} alt={product.name} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-3xl">
             {shop?.emoji || "🛍️"}
@@ -49,13 +49,28 @@ export default function ProductCard({
             onClick={() => onWishlistToggle(product.id)}
             className="absolute top-2 right-2 w-7 h-7 bg-white/90 rounded-full flex items-center justify-center shadow-sm"
           >
-            <Heart
-              size={14}
-              className={isWished ? "text-coral fill-coral" : "text-gray-400"}
-            />
+            <Heart size={14} className={isWished ? "text-coral fill-coral" : "text-gray-400"} />
           </button>
         )}
       </div>
+
+      {/* Thumbnail selector — only if multiple photos */}
+      {photos.length > 1 && (
+        <div className="flex gap-1 px-2 pt-1.5 overflow-x-auto scrollbar-hide">
+          {photos.map((src, i) => (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              key={i}
+              src={src}
+              alt={`variante ${i + 1}`}
+              onClick={() => setSelectedIndex(i)}
+              className={`w-7 h-7 rounded object-cover flex-shrink-0 cursor-pointer border-2 transition-all ${
+                i === selectedIndex ? "border-saffron" : "border-transparent opacity-60"
+              }`}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Info */}
       <div className="p-2">
@@ -74,7 +89,7 @@ export default function ProductCard({
           </div>
           {onOrder && (
             <button
-              onClick={() => onOrder(product, shop)}
+              onClick={() => onOrder(product, shop, photos.length > 1 ? selectedIndex : undefined)}
               className="w-7 h-7 bg-teal rounded-full flex items-center justify-center flex-shrink-0"
             >
               <ShoppingBag size={13} className="text-white" />

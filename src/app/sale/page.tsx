@@ -10,9 +10,9 @@ export default function SalePage() {
   const getShop = (shopId: string): Shop | undefined =>
     mockShops.find((s) => s.id === shopId);
 
-  const handleOrder = (product: Product, shop?: Shop) => {
+  const handleOrder = (product: Product, shop?: Shop, photoIndex?: number) => {
     const msg = encodeURIComponent(
-      `Bonjour, je voudrais commander :\n\n🛍️ *${product.name}*\n🏪 Boutique : ${shop?.name || ""}\n💰 Prix promo : ${product.price} €\n\nMerci !`
+      `Bonjour, je voudrais commander :\n\n🛍️ *${product.name}*\n🏪 Boutique : ${shop?.name || ""}\n💰 Prix promo : ${product.price} €${photoIndex !== undefined ? `\n🎨 Variante : photo n°${photoIndex + 1}` : ""}\n\nMerci !`
     );
     window.open(`https://wa.me/${mockSettings.whatsapp_number}?text=${msg}`, "_blank");
   };
