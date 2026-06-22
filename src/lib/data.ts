@@ -88,3 +88,10 @@ export async function updateWhatsapp(number: string): Promise<boolean> {
   if (error) { console.error("updateWhatsapp:", error.message); return false; }
   return true;
 }
+
+export async function updateProduct(id: string, updates: Partial<Omit<Product, "id">>): Promise<boolean> {
+  if (!isSupabaseReady || !supabase) return false;
+  const { error } = await supabase.from("products").update(updates).eq("id", id);
+  if (error) { console.error("updateProduct:", error.message); return false; }
+  return true;
+}

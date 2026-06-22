@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowLeft, Plus, Trash2, Package, Settings, Loader2 } from "lucide-react";
-import { getShops, getProducts, createShop, deleteShop, createProduct, deleteProduct, getSettings, updateWhatsapp } from "@/lib/data";
+import { ArrowLeft, Plus, Trash2, Package, Settings, Loader2, Pencil, X } from "lucide-react";
+import { getShops, getProducts, createShop, deleteShop, createProduct, deleteProduct, updateProduct, getSettings, updateWhatsapp } from "@/lib/data";
 import { isSupabaseReady } from "@/lib/supabase";
 import { Shop, Product, CATEGORIES, CLOTHING_CATEGORIES, SHOE_CATEGORIES, CLOTHING_SIZES, SHOE_SIZES } from "@/types";
 
@@ -23,6 +23,10 @@ export default function AdminPage() {
   const [newProduct, setNewProduct] = useState({
     shop_id: "", name: "", price: "", old_price: "", is_sale: false, is_bulk: false,
     sizes: [] as string[], imageFile: null as File | null, imagePreview: "",
+  });
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({
+    name: "", price: "", old_price: "", is_sale: false, is_bulk: false, sizes: [] as string[],
   });
 
   useEffect(() => {
@@ -120,6 +124,48 @@ export default function AdminPage() {
   const handleDeleteProduct = async (id: string) => {
     await deleteProduct(id);
     setProducts((prev) => prev.filter((p) => p.id !== id));
+  };
+
+  const startEditing = (product: Product) => {
+    setEditingId(product.id);
+    setEditForm({
+      name: product.name,
+      price: String(product.price),
+      old_price: product.old_price ? String(product.old_price) : "",
+      is_sale: product.is_sale,
+      is_bulk: product.is_bulk,
+      sizes: product.sizes || [],
+    });
+  };
+
+  const toggleEditSize = (size: string) => {
+    setEditForm((prev) => ({
+      ...prev,
+      sizes: prev.sizes.includes(size) ? prev.sizes.filter((s) => s !== size) : [...prev.sizes, size],
+    }));
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingId || !editForm.name.trim() || !editForm.price) return;
+    setSaving(true);
+    const updates = {
+      name: editForm.name.trim(),
+      price: parseInt(editForm.price),
+      old_price: editForm.old_price ? parseInt(editForm.old_price) : undefined,
+      is_sale: editForm.is_sale,
+      is_bulk: editForm.is_bulk,
+      sizes: editForm.sizes,
+    };
+    const ok = await updateProduct(editingId, updates);
+    if (ok) {
+      setProducts((prev) => prev.map((p) => p.id === editingId ? { ...p, ...updates } : p));
+      showFeedback("✓ Produit modifié !");
+    } else {
+      setProducts((prev) => prev.map((p) => p.id === editingId ? { ...p, ...updates } : p));
+      showFeedback(isSupabaseReady ? "⚠️ Erreur Supabase" : "✓ Modifié (mode local)");
+    }
+    setEditingId(null);
+    setSaving(false);
   };
 
   const handleSaveWhatsapp = async () => {
@@ -317,6 +363,60 @@ export default function AdminPage() {
             <div className="space-y-2">
               {products.map((product) => {
                 const shop = shops.find((s) => s.id === product.shop_id);
+                const editSizes = (() => {
+                  if (!shop) return [];
+                  if (shop.categories.some((c) => CLOTHING_CATEGORIES.includes(c))) return CLOTHING_SIZES;
+                  if (shop.categories.some((c) => SHOE_CATEGORIES.includes(c))) return SHOE_SIZES;
+                  return [];
+                })();
+                if (editingId === product.id) {
+                  return (
+                    <div key={product.id} className="bg-white rounded-xl p-4 shadow-sm space-y-3">
+                      <div className="flex items-center justify-between mb-1">
+                        <p className="font-bold text-ink text-sm">Modifier le produit</p>
+                        <button onClick={() => setEditingId(null)} className="text-gray-400 hover:text-coral"><X size={16} /></button>
+                      </div>
+                      <input type="text" value={editForm.name} onChange={(e) => setEditForm((p) => ({ ...p, name: e.target.value }))}
+                        placeholder="Nom du produit" className={inputClass} />
+                      <div className="flex gap-2">
+                        <input type="number" value={editForm.price} onChange={(e) => setEditForm((p) => ({ ...p, price: e.target.value }))}
+                          placeholder="Prix (€)" className={`${inputClass} flex-1`} />
+                        <input type="number" value={editForm.old_price} onChange={(e) => setEditForm((p) => ({ ...p, old_price: e.target.value }))}
+                          placeholder="Ancien prix (€)" className={`${inputClass} flex-1`} />
+                      </div>
+                      <div className="flex gap-4">
+                        <label className="flex items-center gap-2 text-sm cursor-pointer">
+                          <input type="checkbox" checked={editForm.is_sale} onChange={(e) => setEditForm((p) => ({ ...p, is_sale: e.target.checked }))} className="accent-coral" />
+                          En promo
+                        </label>
+                        <label className="flex items-center gap-2 text-sm cursor-pointer">
+                          <input type="checkbox" checked={editForm.is_bulk} onChange={(e) => setEditForm((p) => ({ ...p, is_bulk: e.target.checked }))} className="accent-teal" />
+                          Vente en gros
+                        </label>
+                      </div>
+                      {editSizes.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {editSizes.map((size) => (
+                            <button key={size} onClick={() => toggleEditSize(size)}
+                              className={`px-3 py-1 rounded-full text-xs font-bold border transition-colors ${editForm.sizes.includes(size) ? "bg-ink text-saffron border-ink" : "bg-white text-ink border-gray-200"}`}>
+                              {size}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      <div className="flex gap-2">
+                        <button onClick={handleSaveEdit} disabled={saving}
+                          className="flex-1 bg-ink text-saffron font-bold py-2.5 rounded-xl text-sm disabled:opacity-40">
+                          {saving ? <Loader2 size={14} className="animate-spin inline mr-1" /> : null} Enregistrer
+                        </button>
+                        <button onClick={() => setEditingId(null)}
+                          className="flex-1 bg-gray-100 text-gray-600 font-bold py-2.5 rounded-xl text-sm">
+                          Annuler
+                        </button>
+                      </div>
+                    </div>
+                  );
+                }
                 return (
                   <div key={product.id} className="bg-white rounded-xl px-4 py-3 shadow-sm flex items-center gap-3">
                     <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
@@ -327,14 +427,17 @@ export default function AdminPage() {
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-ink text-sm truncate">{product.name}</p>
                       <p className="text-xs text-gray-400">
-                        {shop?.name} · {product.price.toLocaleString()} F
+                        {shop?.name} · {product.price} €
                         {product.is_sale && <span className="ml-1 text-coral font-bold">PROMO</span>}
                         {product.is_bulk && <span className="ml-1 text-teal font-bold">GROS</span>}
                       </p>
-                      {product.sizes.length > 0 && (
+                      {product.sizes && product.sizes.length > 0 && (
                         <p className="text-xs text-gray-400">{product.sizes.join(" · ")}</p>
                       )}
                     </div>
+                    <button onClick={() => startEditing(product)} className="text-gray-300 hover:text-saffron p-1">
+                      <Pencil size={15} />
+                    </button>
                     <button onClick={() => handleDeleteProduct(product.id)} className="text-gray-300 hover:text-coral p-1">
                       <Trash2 size={16} />
                     </button>
