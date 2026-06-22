@@ -1,0 +1,121 @@
+import { Shop, Product } from "@/types";
+
+export const mockShops: Shop[] = [
+  {
+    id: "shop-1",
+    name: "Sport Zone",
+    emoji: "⚽",
+    categories: ["Sports"],
+  },
+  {
+    id: "shop-2",
+    name: "Mode Femme",
+    emoji: "👗",
+    categories: ["Vêtement femmes", "Accessoires"],
+  },
+  {
+    id: "shop-3",
+    name: "Tech & Phone",
+    emoji: "📱",
+    categories: ["Phone", "Ordinateurs"],
+  },
+  {
+    id: "shop-4",
+    name: "Chaussures & Co",
+    emoji: "👟",
+    categories: ["Chaussures et sacs"],
+  },
+];
+
+export const mockProducts: Product[] = [
+  {
+    id: "p1",
+    shop_id: "shop-1",
+    name: "Maillot Barça 2024",
+    price: 4500,
+    old_price: 6000,
+    is_sale: true,
+    image_url: undefined,
+    categories: ["Sports"],
+  },
+  {
+    id: "p2",
+    shop_id: "shop-1",
+    name: "Maillot Real Madrid",
+    price: 4500,
+    is_sale: false,
+    image_url: undefined,
+    categories: ["Sports"],
+  },
+  {
+    id: "p3",
+    shop_id: "shop-1",
+    name: "Maillot PSG",
+    price: 5000,
+    old_price: 7000,
+    is_sale: true,
+    image_url: undefined,
+    categories: ["Sports"],
+  },
+  {
+    id: "p4",
+    shop_id: "shop-2",
+    name: "Robe fleurie",
+    price: 3500,
+    is_sale: false,
+    image_url: undefined,
+    categories: ["Vêtement femmes"],
+  },
+  {
+    id: "p5",
+    shop_id: "shop-2",
+    name: "Sandales dorées",
+    price: 2800,
+    old_price: 3500,
+    is_sale: true,
+    image_url: undefined,
+    categories: ["Chaussures et sacs"],
+  },
+  {
+    id: "p6",
+    shop_id: "shop-3",
+    name: "Écouteurs Bluetooth",
+    price: 8000,
+    old_price: 12000,
+    is_sale: true,
+    image_url: undefined,
+    categories: ["Phone"],
+  },
+  {
+    id: "p7",
+    shop_id: "shop-3",
+    name: "Chargeur rapide 65W",
+    price: 2500,
+    is_sale: false,
+    image_url: undefined,
+    categories: ["Phone"],
+  },
+  {
+    id: "p8",
+    shop_id: "shop-4",
+    name: "Baskets blanches",
+    price: 7500,
+    is_sale: false,
+    image_url: undefined,
+    categories: ["Chaussures et sacs"],
+  },
+  {
+    id: "p9",
+    shop_id: "shop-4",
+    name: "Sandales cuir homme",
+    price: 4000,
+    old_price: 5500,
+    is_sale: true,
+    image_url: undefined,
+    categories: ["Chaussures et sacs"],
+  },
+];
+
+export const mockSettings = {
+  whatsapp_number: "212600000000",
+};

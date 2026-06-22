@@ -1,38 +1,28 @@
 import type { Metadata } from "next";
-import { Syncopate, DM_Sans } from "next/font/google";
+import { Sora, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 
-const syncopate = Syncopate({
-  weight: ["400", "700"],
+const sora = Sora({
   subsets: ["latin"],
-  variable: "--font-syncopate",
+  variable: "--font-sora",
   display: "swap",
-  preload: true,
 });
 
-const dmSans = DM_Sans({
+const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  variable: "--font-dm-sans",
+  variable: "--font-jakarta",
   display: "swap",
-  preload: true,
 });
 
 export const metadata: Metadata = {
-  title: "Maison Luma — Mobilier Outdoor Premium",
-  description:
-    "Mobilier outdoor haut de gamme en teck massif et tissu Sunbrella®. Collections exclusives, assemblage artisanal, livraison sur-mesure.",
-  keywords: ["mobilier outdoor", "canapé jardin", "teck", "luxe", "Sunbrella"],
-  openGraph: {
-    title: "Maison Luma — Mobilier Outdoor Premium",
-    description: "L'art de vivre en extérieur. Collections exclusives en teck et Sunbrella®.",
-    type: "website",
-  },
+  title: "Souk — Catalogue",
+  description: "Découvrez nos boutiques et produits. Commandez directement via WhatsApp.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr" className={`${syncopate.variable} ${dmSans.variable}`}>
-      <body className="antialiased">{children}</body>
+    <html lang="fr" className={`${sora.variable} ${jakarta.variable}`}>
+      <body>{children}</body>
     </html>
   );
 }
