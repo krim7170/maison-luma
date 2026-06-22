@@ -22,12 +22,12 @@ export default function AdminPage() {
   const [newShopCategory, setNewShopCategory] = useState("");
   const [newProduct, setNewProduct] = useState({
     shop_id: "", name: "", price: "", old_price: "", is_sale: false, is_bulk: false,
-    sizes: [] as string[], imageFile: null as File | null, imagePreview: "",
+    sizes: [] as string[], imageFiles: [] as File[], imagePreviews: [] as string[],
   });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({
     name: "", price: "", old_price: "", is_sale: false, is_bulk: false, sizes: [] as string[],
-    image_url: "", imageFile: null as File | null, imagePreview: "",
+    existingImages: [] as string[], newImageFiles: [] as File[], newImagePreviews: [] as string[],
   });
 
   useEffect(() => {
@@ -89,9 +89,21 @@ export default function AdminPage() {
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setNewProduct((prev) => ({ ...prev, imageFile: file, imagePreview: URL.createObjectURL(file) }));
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    setNewProduct((prev) => {
+      const combined = [...prev.imageFiles, ...files].slice(0, 5);
+      const previews = combined.map((f, i) => i < prev.imagePreviews.length ? prev.imagePreviews[i] : URL.createObjectURL(f));
+      return { ...prev, imageFiles: combined, imagePreviews: [...prev.imagePreviews, ...files.map(f => URL.createObjectURL(f))].slice(0, 5) };
+    });
+  };
+
+  const removeNewImage = (index: number) => {
+    setNewProduct((prev) => ({
+      ...prev,
+      imageFiles: prev.imageFiles.filter((_, i) => i !== index),
+      imagePreviews: prev.imagePreviews.filter((_, i) => i !== index),
+    }));
   };
 
   const handleAddProduct = async () => {
@@ -105,11 +117,11 @@ export default function AdminPage() {
       is_sale: newProduct.is_sale,
       is_bulk: newProduct.is_bulk,
       sizes: newProduct.sizes,
-      image_url: newProduct.imagePreview || undefined,
+      image_url: undefined,
       images: [],
       categories: [] as string[],
     };
-    const product = await createProduct(productData, newProduct.imageFile || undefined);
+    const product = await createProduct(productData, newProduct.imageFiles[0] || undefined);
     if (product) {
       setProducts((prev) => [...prev, product]);
       showFeedback("✓ Produit ajouté !");
@@ -118,7 +130,7 @@ export default function AdminPage() {
       setProducts((prev) => [...prev, local]);
       showFeedback(isSupabaseReady ? "⚠️ Erreur Supabase" : "✓ Ajouté (mode local)");
     }
-    setNewProduct({ shop_id: shops[0]?.id || "", name: "", price: "", old_price: "", is_sale: false, is_bulk: false, sizes: [], imageFile: null, imagePreview: "" });
+    setNewProduct({ shop_id: shops[0]?.id || "", name: "", price: "", old_price: "", is_sale: false, is_bulk: false, sizes: [], imageFiles: [], imagePreviews: [] });
     setSaving(false);
   };
 
@@ -129,6 +141,7 @@ export default function AdminPage() {
 
   const startEditing = (product: Product) => {
     setEditingId(product.id);
+    const existing = product.images?.length ? product.images : product.image_url ? [product.image_url] : [];
     setEditForm({
       name: product.name,
       price: String(product.price),
@@ -136,16 +149,34 @@ export default function AdminPage() {
       is_sale: product.is_sale,
       is_bulk: product.is_bulk,
       sizes: product.sizes || [],
-      image_url: product.image_url || "",
-      imageFile: null,
-      imagePreview: product.image_url || "",
+      existingImages: existing,
+      newImageFiles: [],
+      newImagePreviews: [],
     });
   };
 
   const handleEditImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setEditForm((prev) => ({ ...prev, imageFile: file, imagePreview: URL.createObjectURL(file) }));
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    const total = editForm.existingImages.length + editForm.newImageFiles.length;
+    const allowed = files.slice(0, Math.max(0, 5 - total));
+    setEditForm((prev) => ({
+      ...prev,
+      newImageFiles: [...prev.newImageFiles, ...allowed],
+      newImagePreviews: [...prev.newImagePreviews, ...allowed.map(f => URL.createObjectURL(f))],
+    }));
+  };
+
+  const removeEditExisting = (index: number) => {
+    setEditForm((prev) => ({ ...prev, existingImages: prev.existingImages.filter((_, i) => i !== index) }));
+  };
+
+  const removeEditNew = (index: number) => {
+    setEditForm((prev) => ({
+      ...prev,
+      newImageFiles: prev.newImageFiles.filter((_, i) => i !== index),
+      newImagePreviews: prev.newImagePreviews.filter((_, i) => i !== index),
+    }));
   };
 
   const toggleEditSize = (size: string) => {
@@ -158,16 +189,19 @@ export default function AdminPage() {
   const handleSaveEdit = async () => {
     if (!editingId || !editForm.name.trim() || !editForm.price) return;
     setSaving(true);
-    let image_url = editForm.image_url;
-    if (editForm.imageFile && supabase) {
-      const ext = editForm.imageFile.name.split(".").pop();
-      const path = `${Date.now()}.${ext}`;
-      const { error: uploadError } = await supabase.storage.from("product-images").upload(path, editForm.imageFile, { upsert: false });
-      if (!uploadError) {
-        const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(path);
-        image_url = urlData.publicUrl;
+    const uploadedUrls: string[] = [];
+    if (supabase) {
+      for (const file of editForm.newImageFiles) {
+        const ext = file.name.split(".").pop();
+        const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        const { error: uploadError } = await supabase.storage.from("product-images").upload(path, file, { upsert: false });
+        if (!uploadError) {
+          const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(path);
+          uploadedUrls.push(urlData.publicUrl);
+        }
       }
     }
+    const allImages = [...editForm.existingImages, ...uploadedUrls];
     const updates = {
       name: editForm.name.trim(),
       price: parseInt(editForm.price),
@@ -175,7 +209,8 @@ export default function AdminPage() {
       is_sale: editForm.is_sale,
       is_bulk: editForm.is_bulk,
       sizes: editForm.sizes,
-      image_url,
+      image_url: allImages[0] || undefined,
+      images: allImages,
     };
     const ok = await updateProduct(editingId, updates);
     if (ok) {
@@ -354,21 +389,22 @@ export default function AdminPage() {
                     )}
 
                     <div>
-                      <label className="block text-xs font-semibold text-gray-500 mb-1">Photo du produit</label>
-                      <label className="flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-xl p-4 cursor-pointer hover:border-yellow-400 bg-gray-50">
-                        {newProduct.imagePreview ? (
-                          <img src={newProduct.imagePreview} alt="Preview" className="h-32 object-contain rounded-lg" />
-                        ) : (
-                          <>
-                            <Package size={32} className="text-gray-300 mb-2" />
-                            <span className="text-xs text-gray-400 text-center">
-                              Appuyer pour choisir une photo<br />
-                              <span className="text-teal">depuis la galerie ou appareil photo</span>
-                            </span>
-                          </>
+                      <label className="block text-xs font-semibold text-gray-500 mb-1">Photos ({newProduct.imagePreviews.length}/5)</label>
+                      <div className="flex gap-2 flex-wrap">
+                        {newProduct.imagePreviews.map((src, i) => (
+                          <div key={i} className="relative w-20 h-20">
+                            <img src={src} className="w-full h-full object-cover rounded-lg border border-gray-200" />
+                            <button type="button" onClick={() => removeNewImage(i)} className="absolute -top-1 -right-1 bg-coral text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">✕</button>
+                          </div>
+                        ))}
+                        {newProduct.imagePreviews.length < 5 && (
+                          <label className="w-20 h-20 flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-lg cursor-pointer hover:border-yellow-400 bg-gray-50">
+                            <Package size={20} className="text-gray-300 mb-1" />
+                            <span className="text-xs text-gray-400">+ Photo</span>
+                            <input type="file" accept="image/*" multiple onChange={handleImageChange} className="hidden" />
+                          </label>
                         )}
-                        <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
-                      </label>
+                      </div>
                     </div>
 
                     <button onClick={handleAddProduct}
@@ -425,20 +461,30 @@ export default function AdminPage() {
                           ))}
                         </div>
                       )}
-                      <label className="flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-xl p-3 cursor-pointer hover:border-yellow-400 bg-gray-50">
-                        {editForm.imagePreview ? (
-                          <div className="relative">
-                            <img src={editForm.imagePreview} alt="Preview" className="h-28 object-contain rounded-lg" />
-                            <span className="block text-center text-xs text-teal mt-1">Appuyer pour changer</span>
-                          </div>
-                        ) : (
-                          <>
-                            <Package size={28} className="text-gray-300 mb-1" />
-                            <span className="text-xs text-gray-400 text-center">Ajouter une photo</span>
-                          </>
-                        )}
-                        <input type="file" accept="image/*" onChange={handleEditImageChange} className="hidden" />
-                      </label>
+                      <div>
+                        <p className="text-xs font-semibold text-gray-500 mb-1">Photos ({editForm.existingImages.length + editForm.newImagePreviews.length}/5)</p>
+                        <div className="flex gap-2 flex-wrap">
+                          {editForm.existingImages.map((src, i) => (
+                            <div key={`ex-${i}`} className="relative w-20 h-20">
+                              <img src={src} className="w-full h-full object-cover rounded-lg border border-gray-200" />
+                              <button type="button" onClick={() => removeEditExisting(i)} className="absolute -top-1 -right-1 bg-coral text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">✕</button>
+                            </div>
+                          ))}
+                          {editForm.newImagePreviews.map((src, i) => (
+                            <div key={`new-${i}`} className="relative w-20 h-20">
+                              <img src={src} className="w-full h-full object-cover rounded-lg border border-teal/40" />
+                              <button type="button" onClick={() => removeEditNew(i)} className="absolute -top-1 -right-1 bg-coral text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">✕</button>
+                            </div>
+                          ))}
+                          {editForm.existingImages.length + editForm.newImagePreviews.length < 5 && (
+                            <label className="w-20 h-20 flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-lg cursor-pointer hover:border-yellow-400 bg-gray-50">
+                              <Package size={20} className="text-gray-300 mb-1" />
+                              <span className="text-xs text-gray-400">+ Photo</span>
+                              <input type="file" accept="image/*" multiple onChange={handleEditImageChange} className="hidden" />
+                            </label>
+                          )}
+                        </div>
+                      </div>
 
                       <div className="flex gap-2">
                         <button onClick={handleSaveEdit} disabled={saving}
