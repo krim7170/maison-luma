@@ -130,7 +130,7 @@ export default function AdminPage() {
       image_url: undefined,
       images: [],
       image_labels: newProduct.imageLabels,
-      categories: [] as string[],
+      categories: shops.find(s => s.id === newProduct.shop_id)?.categories || [],
     };
     const product = await createProduct(productData, newProduct.imageFiles[0] || undefined);
     if (product) {
