@@ -22,12 +22,13 @@ export default function AdminPage() {
   const [newShopCategory, setNewShopCategory] = useState("");
   const [newProduct, setNewProduct] = useState({
     shop_id: "", name: "", price: "", old_price: "", is_sale: false, is_bulk: false,
-    sizes: [] as string[], imageFiles: [] as File[], imagePreviews: [] as string[],
+    sizes: [] as string[], imageFiles: [] as File[], imagePreviews: [] as string[], imageLabels: [] as string[],
   });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({
     name: "", price: "", old_price: "", is_sale: false, is_bulk: false, sizes: [] as string[],
-    existingImages: [] as string[], newImageFiles: [] as File[], newImagePreviews: [] as string[],
+    existingImages: [] as string[], existingLabels: [] as string[],
+    newImageFiles: [] as File[], newImagePreviews: [] as string[], newImageLabels: [] as string[],
   });
 
   useEffect(() => {
@@ -103,7 +104,16 @@ export default function AdminPage() {
       ...prev,
       imageFiles: prev.imageFiles.filter((_, i) => i !== index),
       imagePreviews: prev.imagePreviews.filter((_, i) => i !== index),
+      imageLabels: prev.imageLabels.filter((_, i) => i !== index),
     }));
+  };
+
+  const setNewImageLabel = (index: number, label: string) => {
+    setNewProduct((prev) => {
+      const labels = [...prev.imageLabels];
+      labels[index] = label;
+      return { ...prev, imageLabels: labels };
+    });
   };
 
   const handleAddProduct = async () => {
@@ -119,6 +129,7 @@ export default function AdminPage() {
       sizes: newProduct.sizes,
       image_url: undefined,
       images: [],
+      image_labels: newProduct.imageLabels,
       categories: [] as string[],
     };
     const product = await createProduct(productData, newProduct.imageFiles[0] || undefined);
@@ -130,7 +141,7 @@ export default function AdminPage() {
       setProducts((prev) => [...prev, local]);
       showFeedback(isSupabaseReady ? "⚠️ Erreur Supabase" : "✓ Ajouté (mode local)");
     }
-    setNewProduct({ shop_id: shops[0]?.id || "", name: "", price: "", old_price: "", is_sale: false, is_bulk: false, sizes: [], imageFiles: [], imagePreviews: [] });
+    setNewProduct({ shop_id: shops[0]?.id || "", name: "", price: "", old_price: "", is_sale: false, is_bulk: false, sizes: [], imageFiles: [], imagePreviews: [], imageLabels: [] });
     setSaving(false);
   };
 
@@ -150,8 +161,10 @@ export default function AdminPage() {
       is_bulk: product.is_bulk,
       sizes: product.sizes || [],
       existingImages: existing,
+      existingLabels: product.image_labels?.length ? product.image_labels : existing.map(() => ""),
       newImageFiles: [],
       newImagePreviews: [],
+      newImageLabels: [],
     });
   };
 
@@ -164,11 +177,24 @@ export default function AdminPage() {
       ...prev,
       newImageFiles: [...prev.newImageFiles, ...allowed],
       newImagePreviews: [...prev.newImagePreviews, ...allowed.map(f => URL.createObjectURL(f))],
+      newImageLabels: [...prev.newImageLabels, ...allowed.map(() => "")],
     }));
   };
 
   const removeEditExisting = (index: number) => {
-    setEditForm((prev) => ({ ...prev, existingImages: prev.existingImages.filter((_, i) => i !== index) }));
+    setEditForm((prev) => ({
+      ...prev,
+      existingImages: prev.existingImages.filter((_, i) => i !== index),
+      existingLabels: prev.existingLabels.filter((_, i) => i !== index),
+    }));
+  };
+
+  const setExistingLabel = (index: number, label: string) => {
+    setEditForm((prev) => {
+      const labels = [...prev.existingLabels];
+      labels[index] = label;
+      return { ...prev, existingLabels: labels };
+    });
   };
 
   const removeEditNew = (index: number) => {
@@ -176,7 +202,16 @@ export default function AdminPage() {
       ...prev,
       newImageFiles: prev.newImageFiles.filter((_, i) => i !== index),
       newImagePreviews: prev.newImagePreviews.filter((_, i) => i !== index),
+      newImageLabels: prev.newImageLabels.filter((_, i) => i !== index),
     }));
+  };
+
+  const setNewEditImageLabel = (index: number, label: string) => {
+    setEditForm((prev) => {
+      const labels = [...prev.newImageLabels];
+      labels[index] = label;
+      return { ...prev, newImageLabels: labels };
+    });
   };
 
   const toggleEditSize = (size: string) => {
@@ -211,6 +246,7 @@ export default function AdminPage() {
       sizes: editForm.sizes,
       image_url: allImages[0] || undefined,
       images: allImages,
+      image_labels: [...editForm.existingLabels, ...editForm.newImageLabels],
     };
     const ok = await updateProduct(editingId, updates);
     if (ok) {
@@ -392,9 +428,18 @@ export default function AdminPage() {
                       <label className="block text-xs font-semibold text-gray-500 mb-1">Photos ({newProduct.imagePreviews.length}/5)</label>
                       <div className="flex gap-2 flex-wrap">
                         {newProduct.imagePreviews.map((src, i) => (
-                          <div key={i} className="relative w-20 h-20">
-                            <img src={src} className="w-full h-full object-cover rounded-lg border border-gray-200" />
-                            <button type="button" onClick={() => removeNewImage(i)} className="absolute -top-1 -right-1 bg-coral text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">✕</button>
+                          <div key={i} className="flex flex-col gap-1">
+                            <div className="relative w-20 h-20">
+                              <img src={src} className="w-full h-full object-cover rounded-lg border border-gray-200" />
+                              <button type="button" onClick={() => removeNewImage(i)} className="absolute -top-1 -right-1 bg-coral text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">✕</button>
+                            </div>
+                            <input
+                              type="text"
+                              placeholder="Couleur…"
+                              value={newProduct.imageLabels[i] || ""}
+                              onChange={(e) => setNewImageLabel(i, e.target.value)}
+                              className="w-20 text-xs border border-gray-200 rounded px-1.5 py-1 outline-none focus:border-yellow-400"
+                            />
                           </div>
                         ))}
                         {newProduct.imagePreviews.length < 5 && (
@@ -465,15 +510,33 @@ export default function AdminPage() {
                         <p className="text-xs font-semibold text-gray-500 mb-1">Photos ({editForm.existingImages.length + editForm.newImagePreviews.length}/5)</p>
                         <div className="flex gap-2 flex-wrap">
                           {editForm.existingImages.map((src, i) => (
-                            <div key={`ex-${i}`} className="relative w-20 h-20">
-                              <img src={src} className="w-full h-full object-cover rounded-lg border border-gray-200" />
-                              <button type="button" onClick={() => removeEditExisting(i)} className="absolute -top-1 -right-1 bg-coral text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">✕</button>
+                            <div key={`ex-${i}`} className="flex flex-col gap-1">
+                              <div className="relative w-20 h-20">
+                                <img src={src} className="w-full h-full object-cover rounded-lg border border-gray-200" />
+                                <button type="button" onClick={() => removeEditExisting(i)} className="absolute -top-1 -right-1 bg-coral text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">✕</button>
+                              </div>
+                              <input
+                                type="text"
+                                placeholder="Couleur…"
+                                value={editForm.existingLabels[i] || ""}
+                                onChange={(e) => setExistingLabel(i, e.target.value)}
+                                className="w-20 text-xs border border-gray-200 rounded px-1.5 py-1 outline-none focus:border-yellow-400"
+                              />
                             </div>
                           ))}
                           {editForm.newImagePreviews.map((src, i) => (
-                            <div key={`new-${i}`} className="relative w-20 h-20">
-                              <img src={src} className="w-full h-full object-cover rounded-lg border border-teal/40" />
-                              <button type="button" onClick={() => removeEditNew(i)} className="absolute -top-1 -right-1 bg-coral text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">✕</button>
+                            <div key={`new-${i}`} className="flex flex-col gap-1">
+                              <div className="relative w-20 h-20">
+                                <img src={src} className="w-full h-full object-cover rounded-lg border border-teal/40" />
+                                <button type="button" onClick={() => removeEditNew(i)} className="absolute -top-1 -right-1 bg-coral text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">✕</button>
+                              </div>
+                              <input
+                                type="text"
+                                placeholder="Couleur…"
+                                value={editForm.newImageLabels[i] || ""}
+                                onChange={(e) => setNewEditImageLabel(i, e.target.value)}
+                                className="w-20 text-xs border border-gray-200 rounded px-1.5 py-1 outline-none focus:border-yellow-400"
+                              />
                             </div>
                           ))}
                           {editForm.existingImages.length + editForm.newImagePreviews.length < 5 && (

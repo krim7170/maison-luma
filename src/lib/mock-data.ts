@@ -7,7 +7,7 @@ export const mockShops: Shop[] = [
   { id: "shop-4", name: "Chaussures & Co", emoji: "👟", categories: ["Chaussures et sacs"] },
 ];
 
-const base = { is_bulk: false, images: [], sizes: [] };
+const base = { is_bulk: false, images: [], image_labels: [], sizes: [] };
 
 export const mockProducts: Product[] = [
   { ...base, id: "p1", shop_id: "shop-1", name: "Maillot Barça 2024", price: 45, old_price: 60, is_sale: true, image_url: undefined, categories: ["Sports"], sizes: ["S","M","L","XL"] },

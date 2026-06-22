@@ -15,6 +15,7 @@ export interface Product {
   is_bulk: boolean;
   image_url?: string;
   images: string[];
+  image_labels: string[];
   categories: string[];
   sizes: string[];
 }

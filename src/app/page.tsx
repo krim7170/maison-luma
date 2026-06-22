@@ -51,9 +51,9 @@ export default function HomePage() {
     });
   };
 
-  const handleOrder = (product: Product, shop?: Shop, photoIndex?: number) => {
+  const handleOrder = (product: Product, shop?: Shop, selectedLabel?: string) => {
     const msg = encodeURIComponent(
-      `Bonjour, je voudrais commander :\n\n🛍️ *${product.name}*\n🏪 Boutique : ${shop?.name || ""}${photoIndex !== undefined ? `\n🎨 Variante : photo n°${photoIndex + 1}` : ""}\n💰 Prix : ${product.price} €\n\nMerci !`
+      `Bonjour, je voudrais commander :\n\n🛍️ *${product.name}*\n🏪 Boutique : ${shop?.name || ""}${selectedLabel ? `\n🎨 Couleur : ${selectedLabel}` : ""}\n💰 Prix : ${product.price} €\n\nMerci !`
     );
     window.open(`https://wa.me/${whatsapp}?text=${msg}`, "_blank");
   };

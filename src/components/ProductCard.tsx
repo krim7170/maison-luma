@@ -9,7 +9,7 @@ interface ProductCardProps {
   shop?: Shop;
   wishlist?: string[];
   onWishlistToggle?: (productId: string) => void;
-  onOrder?: (product: Product, shop?: Shop, photoIndex?: number) => void;
+  onOrder?: (product: Product, shop?: Shop, selectedLabel?: string) => void;
   size?: "sm" | "md";
 }
 
@@ -24,8 +24,10 @@ export default function ProductCard({
   const isWished = wishlist.includes(product.id);
   const cardWidth = size === "sm" ? "w-36" : "w-44";
   const photos = product.images?.length ? product.images : product.image_url ? [product.image_url] : [];
+  const labels = product.image_labels || [];
   const [selectedIndex, setSelectedIndex] = useState(0);
   const currentPhoto = photos[selectedIndex];
+  const selectedLabel = labels[selectedIndex] || "";
 
   return (
     <div className={`${cardWidth} flex-shrink-0 bg-white rounded-xl overflow-hidden shadow-sm`}>
@@ -58,16 +60,21 @@ export default function ProductCard({
       {photos.length > 1 && (
         <div className="flex gap-1 px-2 pt-1.5 overflow-x-auto scrollbar-hide">
           {photos.map((src, i) => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              key={i}
-              src={src}
-              alt={`variante ${i + 1}`}
-              onClick={() => setSelectedIndex(i)}
-              className={`w-7 h-7 rounded object-cover flex-shrink-0 cursor-pointer border-2 transition-all ${
-                i === selectedIndex ? "border-saffron" : "border-transparent opacity-60"
-              }`}
-            />
+            <button key={i} onClick={() => setSelectedIndex(i)} className="flex flex-col items-center gap-0.5 flex-shrink-0">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={src}
+                alt={labels[i] || `variante ${i + 1}`}
+                className={`w-7 h-7 rounded object-cover border-2 transition-all ${
+                  i === selectedIndex ? "border-saffron" : "border-transparent opacity-60"
+                }`}
+              />
+              {labels[i] && (
+                <span className={`text-[8px] leading-tight text-center max-w-[28px] truncate ${i === selectedIndex ? "text-ink font-bold" : "text-gray-400"}`}>
+                  {labels[i]}
+                </span>
+              )}
+            </button>
           ))}
         </div>
       )}
@@ -89,7 +96,7 @@ export default function ProductCard({
           </div>
           {onOrder && (
             <button
-              onClick={() => onOrder(product, shop, photos.length > 1 ? selectedIndex : undefined)}
+              onClick={() => onOrder(product, shop, photos.length > 1 ? (selectedLabel || `photo n°${selectedIndex + 1}`) : undefined)}
               className="w-7 h-7 bg-teal rounded-full flex items-center justify-center flex-shrink-0"
             >
               <ShoppingBag size={13} className="text-white" />
