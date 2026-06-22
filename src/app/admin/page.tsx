@@ -93,9 +93,9 @@ export default function AdminPage() {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
     setNewProduct((prev) => {
-      const combined = [...prev.imageFiles, ...files].slice(0, 5);
+      const combined = [...prev.imageFiles, ...files].slice(0, 15);
       const previews = combined.map((f, i) => i < prev.imagePreviews.length ? prev.imagePreviews[i] : URL.createObjectURL(f));
-      return { ...prev, imageFiles: combined, imagePreviews: [...prev.imagePreviews, ...files.map(f => URL.createObjectURL(f))].slice(0, 5) };
+      return { ...prev, imageFiles: combined, imagePreviews: [...prev.imagePreviews, ...files.map(f => URL.createObjectURL(f))].slice(0, 15) };
     });
   };
 
@@ -172,7 +172,7 @@ export default function AdminPage() {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
     const total = editForm.existingImages.length + editForm.newImageFiles.length;
-    const allowed = files.slice(0, Math.max(0, 5 - total));
+    const allowed = files.slice(0, Math.max(0, 15 - total));
     setEditForm((prev) => ({
       ...prev,
       newImageFiles: [...prev.newImageFiles, ...allowed],
@@ -425,7 +425,7 @@ export default function AdminPage() {
                     )}
 
                     <div>
-                      <label className="block text-xs font-semibold text-gray-500 mb-1">Photos ({newProduct.imagePreviews.length}/5)</label>
+                      <label className="block text-xs font-semibold text-gray-500 mb-1">Photos ({newProduct.imagePreviews.length}/15)</label>
                       <div className="flex gap-2 flex-wrap">
                         {newProduct.imagePreviews.map((src, i) => (
                           <div key={i} className="flex flex-col gap-1">
@@ -442,7 +442,7 @@ export default function AdminPage() {
                             />
                           </div>
                         ))}
-                        {newProduct.imagePreviews.length < 5 && (
+                        {newProduct.imagePreviews.length < 15 && (
                           <label className="w-20 h-20 flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-lg cursor-pointer hover:border-yellow-400 bg-gray-50">
                             <Package size={20} className="text-gray-300 mb-1" />
                             <span className="text-xs text-gray-400">+ Photo</span>
@@ -507,7 +507,7 @@ export default function AdminPage() {
                         </div>
                       )}
                       <div>
-                        <p className="text-xs font-semibold text-gray-500 mb-1">Photos ({editForm.existingImages.length + editForm.newImagePreviews.length}/5)</p>
+                        <p className="text-xs font-semibold text-gray-500 mb-1">Photos ({editForm.existingImages.length + editForm.newImagePreviews.length}/15)</p>
                         <div className="flex gap-2 flex-wrap">
                           {editForm.existingImages.map((src, i) => (
                             <div key={`ex-${i}`} className="flex flex-col gap-1">
@@ -539,7 +539,7 @@ export default function AdminPage() {
                               />
                             </div>
                           ))}
-                          {editForm.existingImages.length + editForm.newImagePreviews.length < 5 && (
+                          {editForm.existingImages.length + editForm.newImagePreviews.length < 15 && (
                             <label className="w-20 h-20 flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-lg cursor-pointer hover:border-yellow-400 bg-gray-50">
                               <Package size={20} className="text-gray-300 mb-1" />
                               <span className="text-xs text-gray-400">+ Photo</span>
