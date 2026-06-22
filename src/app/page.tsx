@@ -6,7 +6,9 @@ import Link from "next/link";
 import BottomNav from "@/components/BottomNav";
 import CategoryChips from "@/components/CategoryChips";
 import ProductCard from "@/components/ProductCard";
+import WelcomeModal from "@/components/WelcomeModal";
 import { getShops, getProducts, getSettings } from "@/lib/data";
+import { useProfile } from "@/hooks/useProfile";
 import { Shop, Product } from "@/types";
 
 export default function HomePage() {
@@ -16,6 +18,7 @@ export default function HomePage() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("ALL");
   const [loading, setLoading] = useState(true);
+  const { profile, showWelcome, createProfile, toggleWishlist } = useProfile();
 
   useEffect(() => {
     Promise.all([getShops(), getProducts(), getSettings()]).then(
@@ -52,14 +55,17 @@ export default function HomePage() {
   };
 
   const handleOrder = (product: Product, shop?: Shop, selectedLabel?: string) => {
+    const nameTag = profile ? `\n👤 Client : ${profile.name}` : "";
     const msg = encodeURIComponent(
-      `Bonjour, je voudrais commander :\n\n🛍️ *${product.name}*\n🏪 Boutique : ${shop?.name || ""}${selectedLabel ? `\n🎨 Couleur : ${selectedLabel}` : ""}\n💰 Prix : ${product.price} €\n\nMerci !`
+      `Bonjour, je voudrais commander :\n\n🛍️ *${product.name}*\n🏪 Boutique : ${shop?.name || ""}${selectedLabel ? `\n🎨 Couleur : ${selectedLabel}` : ""}${nameTag}\n💰 Prix : ${product.price} €\n\nMerci !`
     );
     window.open(`https://wa.me/${whatsapp}?text=${msg}`, "_blank");
   };
 
   return (
     <div className="min-h-screen bg-sable pb-24">
+      {showWelcome && <WelcomeModal onSave={createProfile} />}
+
       {/* Header */}
       <header className="bg-ink px-4 pt-10 pb-4">
         <div className="max-w-lg mx-auto">
@@ -67,12 +73,19 @@ export default function HomePage() {
             <h1 className="font-sora text-2xl font-extrabold text-saffron tracking-tight">
               SOUK
             </h1>
-            <Link
-              href="/admin"
-              className="text-white/30 text-xs font-jakarta hover:text-white/60 transition-colors"
-            >
-              Admin
-            </Link>
+            <div className="flex items-center gap-3">
+              {profile && (
+                <span className="text-white/50 text-xs font-jakarta">
+                  👋 {profile.name}
+                </span>
+              )}
+              <Link
+                href="/admin"
+                className="text-white/30 text-xs font-jakarta hover:text-white/60 transition-colors"
+              >
+                Admin
+              </Link>
+            </div>
           </div>
           <div className="relative">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
@@ -127,6 +140,8 @@ export default function HomePage() {
                       key={product.id}
                       product={product}
                       shop={shop}
+                      wishlist={profile?.wishlist || []}
+                      onWishlistToggle={toggleWishlist}
                       onOrder={handleOrder}
                     />
                   ))}
