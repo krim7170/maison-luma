@@ -12,9 +12,17 @@ export interface Product {
   price: number;
   old_price?: number;
   is_sale: boolean;
+  is_bulk: boolean;
   image_url?: string;
+  images: string[];
   categories: string[];
+  sizes: string[];
 }
+
+export const CLOTHING_CATEGORIES = ["Sports", "Vêtements hommes", "Vêtement femmes", "Underwear", "Maman et bébé"];
+export const SHOE_CATEGORIES = ["Chaussures et sacs"];
+export const CLOTHING_SIZES = ["S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL", "6XL"];
+export const SHOE_SIZES = ["36", "37", "38", "39", "40", "41", "42", "43", "44", "45"];
 
 export interface Profile {
   id: string;
