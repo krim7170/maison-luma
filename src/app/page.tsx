@@ -18,7 +18,7 @@ export default function HomePage() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("ALL");
   const [loading, setLoading] = useState(true);
-  const { profile, showWelcome, createProfile, toggleWishlist } = useProfile();
+  const { profile, showWelcome, setShowWelcome, createProfile, toggleWishlist } = useProfile();
 
   useEffect(() => {
     Promise.all([getShops(), getProducts(), getSettings()]).then(
@@ -64,7 +64,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-sable pb-24">
-      {showWelcome && <WelcomeModal onSave={createProfile} />}
+      {showWelcome && <WelcomeModal onSave={createProfile} onClose={() => setShowWelcome(false)} />}
 
       {/* Header */}
       <header className="bg-ink px-4 pt-10 pb-4">

@@ -22,11 +22,9 @@ export function useProfile() {
     if (savedId && isSupabaseReady && supabase) {
       supabase.from("profiles").select("*").eq("id", savedId).single().then(({ data }) => {
         if (data) setProfile(data as Profile);
-        else setShowWelcome(true);
         setLoading(false);
       });
     } else {
-      setShowWelcome(!savedId);
       setLoading(false);
     }
   }, []);
@@ -49,7 +47,7 @@ export function useProfile() {
   };
 
   const toggleWishlist = async (productId: string) => {
-    if (!profile) { setShowWelcome(true); return; }
+    if (!profile) { setShowWelcome(true); return; } // ouvre la mini popup au clic ❤️
     const inList = profile.wishlist.includes(productId);
     const updated = inList ? profile.wishlist.filter(id => id !== productId) : [...profile.wishlist, productId];
     setProfile({ ...profile, wishlist: updated });
