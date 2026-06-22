@@ -20,8 +20,8 @@ export interface Product {
   sizes: string[];
 }
 
-export const CLOTHING_CATEGORIES = ["Sports", "Vêtements hommes", "Vêtement femmes", "Underwear", "Maman et bébé"];
-export const SHOE_CATEGORIES = ["Chaussures et sacs"];
+export const CLOTHING_CATEGORIES = ["Sports", "Vêtements hommes", "Vêtements femmes", "Sous-vêtements", "Maman et bébé"];
+export const SHOE_CATEGORIES = ["Chaussures"];
 export const CLOTHING_SIZES = ["S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL", "6XL"];
 export const SHOE_SIZES = ["36", "37", "38", "39", "40", "41", "42", "43", "44", "45"];
 
@@ -53,21 +53,22 @@ export const CATEGORIES = [
   "ALL",
   "Sports",
   "Maman et bébé",
-  "Chaussures et sacs",
+  "Chaussures",
+  "Sacs",
   "Vêtements hommes",
-  "Vêtement femmes",
-  "Marchandise général",
-  "Home textiles",
+  "Vêtements femmes",
+  "Marchandise générale",
+  "Textile maison",
   "Accessoires",
-  "Furnitures",
+  "Meubles",
   "Médecine",
-  "Underwear",
-  "Phone",
+  "Sous-vêtements",
+  "Téléphones",
   "Global",
-  "Home appliances",
-  "Home improvement",
+  "Électroménager",
+  "Bricolage",
   "Ordinateurs",
-  "Accessoires voitures",
+  "Accessoires voiture",
   "Beauté",
   "Jouets",
 ] as const;
