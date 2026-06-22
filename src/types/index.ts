@@ -69,4 +69,5 @@ export const CATEGORIES = [
   "Ordinateurs",
   "Beauté",
   "Home improvement",
+  "Jouets",
 ] as const;

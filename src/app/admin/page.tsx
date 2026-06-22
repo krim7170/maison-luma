@@ -427,14 +427,17 @@ export default function AdminPage() {
                       )}
                       <label className="flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-xl p-3 cursor-pointer hover:border-yellow-400 bg-gray-50">
                         {editForm.imagePreview ? (
-                          <img src={editForm.imagePreview} alt="Preview" className="h-28 object-contain rounded-lg" />
+                          <div className="relative">
+                            <img src={editForm.imagePreview} alt="Preview" className="h-28 object-contain rounded-lg" />
+                            <span className="block text-center text-xs text-teal mt-1">Appuyer pour changer</span>
+                          </div>
                         ) : (
                           <>
                             <Package size={28} className="text-gray-300 mb-1" />
-                            <span className="text-xs text-gray-400 text-center">Changer la photo</span>
+                            <span className="text-xs text-gray-400 text-center">Ajouter une photo</span>
                           </>
                         )}
-                        <input type="file" accept="image/*" capture="environment" onChange={handleEditImageChange} className="hidden" />
+                        <input type="file" accept="image/*" onChange={handleEditImageChange} className="hidden" />
                       </label>
 
                       <div className="flex gap-2">
