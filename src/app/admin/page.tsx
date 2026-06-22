@@ -345,7 +345,7 @@ export default function AdminPage() {
                     <input type="text" placeholder="Nom du produit" value={newProduct.name}
                       onChange={(e) => setNewProduct((prev) => ({ ...prev, name: e.target.value }))} className={inputClass} />
                     <div className="flex gap-2">
-                      <input type="number" placeholder="Prix (F CFA)" value={newProduct.price}
+                      <input type="number" placeholder="Prix (€)" value={newProduct.price}
                         onChange={(e) => setNewProduct((prev) => ({ ...prev, price: e.target.value }))} className={`${inputClass} flex-1`} />
                       <input type="number" placeholder="Ancien prix" value={newProduct.old_price}
                         onChange={(e) => setNewProduct((prev) => ({ ...prev, old_price: e.target.value }))} className={`${inputClass} flex-1`} />

@@ -64,11 +64,11 @@ export default function ProductCard({
         <div className="mt-1.5 flex items-end justify-between gap-1">
           <div>
             <span className="price-tag text-xs px-1.5 py-0.5 inline-block">
-              {product.price.toLocaleString()} F
+              {product.price} €
             </span>
             {product.old_price && (
               <span className="block text-[10px] text-gray-400 line-through mt-0.5">
-                {product.old_price.toLocaleString()} F
+                {product.old_price} €
               </span>
             )}
           </div>

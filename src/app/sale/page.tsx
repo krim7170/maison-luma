@@ -12,7 +12,7 @@ export default function SalePage() {
 
   const handleOrder = (product: Product, shop?: Shop) => {
     const msg = encodeURIComponent(
-      `Bonjour, je voudrais commander :\n\n🛍️ *${product.name}*\n🏪 Boutique : ${shop?.name || ""}\n💰 Prix promo : ${product.price.toLocaleString()} F CFA\n\nMerci !`
+      `Bonjour, je voudrais commander :\n\n🛍️ *${product.name}*\n🏪 Boutique : ${shop?.name || ""}\n💰 Prix promo : ${product.price} €\n\nMerci !`
     );
     window.open(`https://wa.me/${mockSettings.whatsapp_number}?text=${msg}`, "_blank");
   };
@@ -79,11 +79,11 @@ export default function SalePage() {
                     <div className="mt-2 flex items-end justify-between">
                       <div>
                         <span className="price-tag text-sm px-2 py-1 inline-block">
-                          {product.price.toLocaleString()} F
+                          {product.price} €
                         </span>
                         {product.old_price && (
                           <span className="block text-xs text-gray-400 line-through mt-1">
-                            {product.old_price.toLocaleString()} F
+                            {product.old_price} €
                           </span>
                         )}
                       </div>
