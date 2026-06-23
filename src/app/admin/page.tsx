@@ -357,7 +357,7 @@ export default function AdminPage() {
             </div>
             <div className="space-y-2">
               {shops.map((shop) => (
-                {editingShopId === shop.id ? (
+                editingShopId === shop.id ? (
                   <div key={shop.id} className="bg-white rounded-xl p-4 shadow-sm space-y-3">
                     <div className="flex gap-2">
                       <input type="text" value={editShopForm.emoji} onChange={(e) => setEditShopForm(p => ({ ...p, emoji: e.target.value }))}
@@ -392,7 +392,7 @@ export default function AdminPage() {
                       <button onClick={() => handleDeleteShop(shop.id)} className="text-gray-300 hover:text-coral p-1"><Trash2 size={16} /></button>
                     </div>
                   </div>
-                )}
+                )
               ))}
               {shops.length === 0 && (
                 <p className="text-center text-gray-400 text-sm py-6">Aucune boutique</p>
