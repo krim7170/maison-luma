@@ -20,6 +20,8 @@ export default function AdminPage() {
   const [newShopName, setNewShopName] = useState("");
   const [newShopEmoji, setNewShopEmoji] = useState("🛍️");
   const [newShopCategory, setNewShopCategory] = useState("");
+  const [editingShopId, setEditingShopId] = useState<string | null>(null);
+  const [editShopForm, setEditShopForm] = useState({ name: "", emoji: "", category: "" });
   const [newProduct, setNewProduct] = useState({
     shop_id: "", name: "", price: "", old_price: "", is_sale: false, is_bulk: false,
     sizes: [] as string[], imageFiles: [] as File[], imagePreviews: [] as string[], imageLabels: [] as string[],
@@ -87,6 +89,24 @@ export default function AdminPage() {
     await deleteShop(id);
     setShops((prev) => prev.filter((s) => s.id !== id));
     setProducts((prev) => prev.filter((p) => p.shop_id !== id));
+  };
+
+  const startEditingShop = (shop: Shop) => {
+    setEditingShopId(shop.id);
+    setEditShopForm({ name: shop.name, emoji: shop.emoji, category: shop.categories[0] || "" });
+  };
+
+  const handleSaveShop = async () => {
+    if (!editingShopId || !editShopForm.name.trim()) return;
+    setSaving(true);
+    const updates = { name: editShopForm.name.trim(), emoji: editShopForm.emoji, categories: editShopForm.category ? [editShopForm.category] : [] };
+    if (isSupabaseReady && supabase) {
+      await supabase.from("shops").update(updates).eq("id", editingShopId);
+    }
+    setShops((prev) => prev.map((s) => s.id === editingShopId ? { ...s, ...updates } : s));
+    showFeedback("✓ Boutique modifiée !");
+    setEditingShopId(null);
+    setSaving(false);
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -337,20 +357,42 @@ export default function AdminPage() {
             </div>
             <div className="space-y-2">
               {shops.map((shop) => (
-                <div key={shop.id} className="bg-white rounded-xl px-4 py-3 shadow-sm flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">{shop.emoji}</span>
-                    <div>
-                      <p className="font-semibold text-ink">{shop.name}</p>
-                      <p className="text-xs text-gray-400">
-                        {shop.categories[0] || "Sans catégorie"} · {products.filter((p) => p.shop_id === shop.id).length} produit(s)
-                      </p>
+                {editingShopId === shop.id ? (
+                  <div key={shop.id} className="bg-white rounded-xl p-4 shadow-sm space-y-3">
+                    <div className="flex gap-2">
+                      <input type="text" value={editShopForm.emoji} onChange={(e) => setEditShopForm(p => ({ ...p, emoji: e.target.value }))}
+                        className="w-16 border border-gray-200 rounded-lg px-2 py-2 text-center text-sm outline-none focus:border-yellow-400" />
+                      <input type="text" value={editShopForm.name} onChange={(e) => setEditShopForm(p => ({ ...p, name: e.target.value }))}
+                        className={`${inputClass} flex-1`} placeholder="Nom de la boutique" />
+                    </div>
+                    <select value={editShopForm.category} onChange={(e) => setEditShopForm(p => ({ ...p, category: e.target.value }))} className={inputClass}>
+                      <option value="">Catégorie principale</option>
+                      {CATEGORIES.filter(c => c !== "ALL").map((c) => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                    <div className="flex gap-2">
+                      <button onClick={handleSaveShop} disabled={saving} className="flex-1 bg-ink text-saffron font-bold py-2.5 rounded-xl text-sm">
+                        {saving ? <Loader2 size={14} className="animate-spin inline mr-1" /> : null} Enregistrer
+                      </button>
+                      <button onClick={() => setEditingShopId(null)} className="flex-1 bg-gray-100 text-gray-600 font-bold py-2.5 rounded-xl text-sm">Annuler</button>
                     </div>
                   </div>
-                  <button onClick={() => handleDeleteShop(shop.id)} className="text-gray-300 hover:text-coral p-1">
-                    <Trash2 size={16} />
-                  </button>
-                </div>
+                ) : (
+                  <div key={shop.id} className="bg-white rounded-xl px-4 py-3 shadow-sm flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{shop.emoji}</span>
+                      <div>
+                        <p className="font-semibold text-ink">{shop.name}</p>
+                        <p className="text-xs text-gray-400">
+                          {shop.categories[0] || "Sans catégorie"} · {products.filter((p) => p.shop_id === shop.id).length} produit(s)
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex gap-1">
+                      <button onClick={() => startEditingShop(shop)} className="text-gray-300 hover:text-saffron p-1"><Pencil size={15} /></button>
+                      <button onClick={() => handleDeleteShop(shop.id)} className="text-gray-300 hover:text-coral p-1"><Trash2 size={16} /></button>
+                    </div>
+                  </div>
+                )}
               ))}
               {shops.length === 0 && (
                 <p className="text-center text-gray-400 text-sm py-6">Aucune boutique</p>
